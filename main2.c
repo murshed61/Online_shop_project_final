@@ -111,6 +111,8 @@ void add_products();
 void my_items();
 void search_items();
 void buy_item(int product_id);
+int check_seller_username(char *str);
+int check_customer_username(char *str);
 //////////////////
 void clear()
 {
@@ -125,7 +127,7 @@ int id_generator()
 void pause()
 {
     fflush(stdin);
-    printf("\nPress Enter To continue.....\n");
+    printf("\nPress Enter To continue.....");
     getchar();
 }
 void save_product_data()
@@ -155,13 +157,14 @@ void populate_product_data()
         return;
     }
 
-    while (fread(ptr, sizeof(product), 1, file))
+    product *new_customer = (product *)malloc(sizeof(product));
+    product *temp = ptr;
+    while (fread(new_customer, sizeof(product), 1, file))
     {
-        product *new_product = (product *)malloc(sizeof(product));
-        memcpy(new_product, ptr, sizeof(product));
-        new_product->next = ptr->next;
-        ptr->next = new_product;
-        ptr = new_product;
+        temp->next = (product *)malloc(sizeof(product));
+        temp = temp->next;
+        memcpy(temp, new_customer, sizeof(product));
+        temp->next = NULL;
     }
 
     fclose(file);
@@ -193,13 +196,14 @@ void populate_seller_data()
         return;
     }
 
-    while (fread(pointer, sizeof(seller), 1, file))
+    seller *new_customer = (seller *)malloc(sizeof(seller));
+    seller *temp = pointer;
+    while (fread(new_customer, sizeof(seller), 1, file))
     {
-        seller *new_seller = (seller *)malloc(sizeof(seller));
-        memcpy(new_seller, pointer, sizeof(seller));
-        new_seller->next = pointer->next;
-        pointer->next = new_seller;
-        pointer = new_seller;
+        temp->next = (seller *)malloc(sizeof(seller));
+        temp = temp->next;
+        memcpy(temp, new_customer, sizeof(seller));
+        temp->next = NULL;
     }
 
     fclose(file);
@@ -230,14 +234,14 @@ void populate_customer_data()
         printf("Error opening customer data file.\n");
         return;
     }
-
-    while (fread(head, sizeof(customer), 1, file))
+    customer *new_customer = (customer *)malloc(sizeof(customer));
+    customer *temp = head;
+    while (fread(new_customer, sizeof(customer), 1, file))
     {
-        customer *new_customer = (customer *)malloc(sizeof(customer));
-        memcpy(new_customer, head, sizeof(customer));
-        new_customer->next = head->next;
-        head->next = new_customer;
-        head = new_customer;
+        temp->next = (customer *)malloc(sizeof(customer));
+        temp = temp->next;
+        memcpy(temp, new_customer, sizeof(customer));
+        temp->next = NULL;
     }
 
     fclose(file);
@@ -268,12 +272,19 @@ void popular_item()
     int i = 0;
     while (temp != NULL)
     {
-        if (temp->number_of_reviews != 0)
+        if (temp->number_of_reviews > 0)
         {
             if (temp->reviews / temp->number_of_reviews >= 4)
             {
-                printf("[%d] Item Name: %s\n", i + 1, temp->name);
-                printf("Review: %.1f\n", temp->reviews / temp->number_of_reviews);
+                printf("+----------------------+--------------------------+\n");
+                printf("| %-20s | %-24s |\n", "Item Number", "Item Name");
+                printf("+----------------------+--------------------------+\n");
+                printf("| %-20d | %-24s |\n", i + 1, temp->name);
+                printf("+----------------------+--------------------------+\n");
+                printf("| %-20s | %-24s |\n", "Review", "Average Rating");
+                printf("+----------------------+--------------------------+\n");
+                printf("| %-20s | %-24.1f |\n", " ", temp->reviews / temp->number_of_reviews);
+                printf("+----------------------+--------------------------+\n");
                 arr[i++] = temp->product_id;
             }
         }
@@ -281,14 +292,27 @@ void popular_item()
     }
     if (customer_logged_in)
     {
-        printf("Choose to buy: ");
-        int chh;
-        scanf(" %d", &chh);
-        buy_item(arr[chh - 1]);
+        if (i)
+        {
+            printf("+--------------------------+\n");
+            printf("|   Choose to buy:         |\n");
+            printf("+--------------------------+\n");
+
+            int chh;
+            scanf(" %d", &chh);
+            buy_item(arr[chh - 1]);
+        }
+        printf("+-----------------------+\n");
+        printf("|     No Items Found    |\n");
+        printf("+-----------------------+\n");
+        pause();
+        customer_front_display();
     }
     if (i == 0)
     {
-        printf("No Items Found\n");
+        printf("+-----------------------+\n");
+        printf("|     No Items Found    |\n");
+        printf("+-----------------------+\n");
     }
     pause();
     front_display();
@@ -296,11 +320,18 @@ void popular_item()
 void front_display()
 {
     clear();
-    printf("1. See Popular Items\n");
-    printf("2. Search Items\n");
-    printf("3. Categories\n");
-    printf("4. Customer Portal\n");
-    printf("5. Seller Portal\n");
+    printf("+------------------------+\n");
+    printf("| 1. See Popular Items   |\n");
+    printf("+------------------------+\n");
+    printf("| 2. Search Items        |\n");
+    printf("+------------------------+\n");
+    printf("| 3. Categories          |\n");
+    printf("+------------------------+\n");
+    printf("| 4. Customer Portal     |\n");
+    printf("+------------------------+\n");
+    printf("| 5. Seller Portal       |\n");
+    printf("+------------------------+\n");
+    printf("| >>");
     int ch;
     scanf(" %d", &ch);
     switch (ch)
@@ -333,7 +364,10 @@ void search_by_categories()
         printf("[%d] %s\n", i + 1, categories[i]);
     }
     int ch;
-    printf("\nChoose a category:");
+    printf("\n+-----------------------+\n");
+    printf("| Choose a category:    |\n");
+    printf("+-----------------------+\n");
+    printf(">>");
     scanf(" %d", &ch);
     product *item = ptr;
     int arr[1000] = {0};
@@ -350,10 +384,18 @@ void search_by_categories()
 
     if (customer_logged_in)
     {
-        printf("Choose to buy: ");
-        int chh;
-        scanf(" %d", &chh);
-        buy_item(arr[chh - 1]);
+        if (i != 0)
+        {
+            printf("+-------------------+\n");
+            printf("| Choose to buy:    |\n");
+            printf("+-------------------+\n");
+            printf(">>");
+            int chh;
+            scanf(" %d", &chh);
+            buy_item(arr[chh - 1]);
+        }
+        pause();
+        customer_front_display();
     }
     pause();
     front_display();
@@ -361,12 +403,20 @@ void search_by_categories()
 void customer_portal_display()
 {
     clear();
-    printf("Customer Portal\n");
-    printf("[1] Sign_up\n");
-    printf("[2] Sign In\n");
-    printf("[3] Return TO main\n");
+    printf("+-------------------+\n");
+    printf("|   Customer Portal |\n");
+    printf("+-------------------+\n");
+    printf("| [1] Sign_up       |\n");
+    printf("+-------------------+\n");
+    printf("| [2] Sign In       |\n");
+    printf("+-------------------+\n");
+    printf("| [3] Return to Main|\n");
+    printf("+-------------------+\n");
+    printf("| >>");
     int ch;
+    fflush(stdin);
     scanf(" %d", &ch);
+    fflush(stdin);
     switch (ch)
     {
     case 1:
@@ -397,33 +447,81 @@ void customer_sign_up()
     // Allocate memory for the new customer
     temp->next = (customer *)malloc(sizeof(customer));
     temp = temp->next;
+    temp->next = NULL;
 
     // Prompt the user for the username
-    printf("Username: ");
-    scanf(" %[^\n]s", temp->name);
-    printf("Password: ");
-    scanf(" %s[^\n]", temp->password);
+    printf("+-------------------+\n");
+    printf("|   Username:       |\n");
+    printf("+-------------------+\n>>");
+    scanf(" %[^\n]s", temp->name); // Assuming temp->name is a character array for storing the username
+    if (check_customer_username(temp->name))
+    {
+        printf("+---------------------+\n");
+        printf("| User Already Exists |\n");
+        printf("+---------------------+\n");
+        pause();
+        customer_portal_display();
+    }
+    printf("+-------------------+\n");
+    printf("|   Password:       |\n");
+    printf("+-------------------+\n>>");
+    scanf(" %s", temp->password); // Assuming temp->password is a character array for storing the password
 
     // Generate a unique customer ID
     temp->customer_id = id_generator();
-
-    temp->next = NULL;
     temp->balance = 1000;
     temp->index = 0;
     save_customer_data();
-    printf("Successfully registered\n");
+    printf("+----------------------------+\n");
+    printf("| Successfully registered    |\n");
+    printf("+----------------------------+\n");
+
     pause();
     customer_portal_display();
+}
+int check_customer_username(char *str)
+{
+    customer *temp = head->next; // Assuming head points to the first node
+    while (temp->next != NULL)
+    {
+        if (strcmp(temp->name, str) == 0)
+        {
+            return 1; // Username exists
+        }
+        temp = temp->next;
+    }
+    return 0; // Username doesn't exist
+}
+
+int check_seller_username(char *str)
+{
+    seller *temp = pointer;
+    temp = temp->next;
+    while (temp->next != NULL)
+    {
+        if (strcmp(temp->name, str) == 0)
+        {
+            return 1;
+        }
+        temp = temp->next;
+    }
+    return 0;
 }
 void customer_sign_in()
 {
     clear();
     char username[20];
     char pass[20];
-    printf("Enter Username:");
+    printf("+-------------------+\n");
+    printf("| Enter Username:  |\n");
+    printf("+-------------------+\n>>");
     scanf(" %[^\n]s", username);
-    printf("Enter Password: ");
+
+    printf("+-------------------+\n");
+    printf("| Enter Password:  |\n");
+    printf("+-------------------+\n>>");
     scanf(" %[^\n]s", pass);
+
     customer *temp = head;
     int found = 0;
     while (temp != NULL)
@@ -437,7 +535,10 @@ void customer_sign_in()
     }
     if (found)
     {
-        printf("Logged In Succesfully\n");
+        printf("+------------------------+\n");
+        printf("| Logged In Successfully |\n");
+        printf("+------------------------+\n");
+
         customer_ID = temp->customer_id;
         customer_logged_in = 1;
         pause();
@@ -453,10 +554,16 @@ void customer_sign_in()
 void seller_login_portal()
 {
     clear();
-    printf("Seller Portal\n");
-    printf("[1]SignUp\n");
-    printf("[2] Sign In\n");
-    printf("[3] Back TO Main\n");
+    printf("+-------------------+\n");
+    printf("|   Seller Portal   |\n");
+    printf("+-------------------+\n");
+    printf("| [1] SignUp        |\n");
+    printf("+-------------------+\n");
+    printf("| [2] Sign In       |\n");
+    printf("+-------------------+\n");
+    printf("| [3] Back to Main  |\n");
+    printf("+-------------------+\n>>");
+
     int ch;
     scanf("%d", &ch);
     switch (ch)
@@ -485,11 +592,24 @@ void seller_sign_up()
     }
     temps->next = (seller *)malloc(sizeof(seller));
     temps = temps->next;
-    printf("UserName: ");
-    scanf(" %[^\n]s", temps->name);
-    printf("Password: ");
-    scanf(" %s[^\n]", temps->pass);
     temps->next = NULL;
+    printf("+-------------------+\n");
+    printf("|    UserName:      |\n");
+    printf("+-------------------+\n");
+    scanf(" %[^\n]s", temps->name); // Assuming temps->name is a character array for storing the username
+    if (check_seller_username(temps->name) == 1)
+    {
+        printf("+---------------------+\n");
+        printf("| User Already Exists |\n");
+        printf("+---------------------+\n");
+        pause();
+        seller_front_display();
+    }
+    printf("+-------------------+\n");
+    printf("|    Password:      |\n");
+    printf("+-------------------+\n");
+    scanf(" %[^\n]s", temps->pass); // Assuming temps->pass is a character array for storing the password
+
     temps->seller_id = id_generator();
     temps->undelivered_index = 0;
     temps->index = 0;
@@ -503,10 +623,16 @@ void seller_signin()
     clear();
     char username[20];
     char pass[20];
-    printf("Enter Username:");
+    printf("+-------------------+\n");
+    printf("| Enter Username:  |\n");
+    printf("+-------------------+\n>>");
     scanf(" %[^\n]s", username);
-    printf("Enter Password: ");
+
+    printf("+-------------------+\n");
+    printf("| Enter Password:  |\n");
+    printf("+-------------------+\n>>");
     scanf(" %[^\n]s", pass);
+
     seller *temps = pointer;
     int found = 0;
     while (temps != NULL)
@@ -522,13 +648,18 @@ void seller_signin()
     }
     if (found)
     {
-        printf("Logged In Succesfully\n");
+        printf("+------------------------+\n");
+        printf("| Logged In Successfully |\n");
+        printf("+------------------------+\n");
+
         pause();
         seller_front_display();
     }
     else
     {
-        printf("Invalid Inputs\n");
+        printf("+-------------------+\n");
+        printf("| Invalid Inputs    |\n");
+        printf("+-------------------+\n");
     }
     pause();
     seller_login_portal();
@@ -536,18 +667,27 @@ void seller_signin()
 void customer_front_display()
 {
     clear();
-    printf("[1] Populer Items To Buy\n");
-    printf("[2] Search Items\n");
-    printf("[3] Categories\n");
-    printf("[4] My Cart\n");
-    printf("[5] Give Reviews\n");
-    printf("[6] My Balance\n");
-    printf("[7] Logout\n");
+    printf("+--------------------------+\n");
+    printf("| [1] Popular Items To Buy |\n");
+    printf("+--------------------------+\n");
+    printf("| [2] Search Items         |\n");
+    printf("+--------------------------+\n");
+    printf("| [3] Categories           |\n");
+    printf("+--------------------------+\n");
+    printf("| [4] My Cart              |\n");
+    printf("+--------------------------+\n");
+    printf("| [5] Give Reviews         |\n");
+    printf("+--------------------------+\n");
+    printf("| [6] My Balance           |\n");
+    printf("+--------------------------+\n");
+    printf("| [7] Logout               |\n");
+    printf("+--------------------------+\n>>");
     int ch;
     scanf(" %d", &ch);
     switch (ch)
     {
     case 1:
+        popular_item();
         break;
     case 2:
         search_items();
@@ -567,24 +707,35 @@ void customer_front_display()
     case 7:
         customer_logged_in = 0;
         customer_ID = 0;
+        front_display();
+        break;
+    default:
+        customer_front_display();
         break;
     }
 }
 void balance()
 {
     clear();
-    printf("Your Balance is:");
+
     customer *temp = head;
     while (temp != NULL)
     {
         if (customer_ID == temp->customer_id)
         {
-            printf("%.2f\n", temp->balance);
+            printf("+-------------------+\n");
+            printf("| Your Balance is: %.2f BDT\n", temp->balance);
+            printf("+-------------------+\n");
             break;
         }
         temp = temp->next;
     }
-    printf("[1]Add Balance [2]Return\n");
+    printf("+-----------------------+\n");
+    printf("| [1] Add Balance       |\n");
+    printf("+-----------------------+\n");
+    printf("| [2] Return            |\n");
+    printf("+-----------------------+\n>>");
+
     int ch;
     scanf(" %d", &ch);
     if (ch != 1)
@@ -592,19 +743,27 @@ void balance()
         pause();
         customer_front_display();
     }
-    printf("Add : ");
+    printf("+------------+\n");
+    printf("| Add :      |\n");
+    printf("+------------+\n>>");
+
     float add;
     scanf(" %f", &add);
     temp->balance += add;
     save_customer_data();
-    printf("New Balance: %.2f\n", temp->balance);
+    printf("+--------------------------+\n");
+    printf("| New Balance: %.2f         |\n", temp->balance);
+    printf("+--------------------------+\n");
     pause();
     customer_front_display();
 }
 void give_reviews()
 {
     clear();
-    printf("Delivered Products:\n");
+    printf("+------------------+\n");
+    printf("| Delivered Products |\n");
+    printf("+------------------+\n");
+
     product *temp = ptr;
     customer *tempc = head;
     while (tempc != NULL)
@@ -616,14 +775,21 @@ void give_reviews()
         tempc = tempc->next;
     }
     int found = 0;
-    while (temp != NULL&&tempc!=NULL)
+    while (temp != NULL && tempc != NULL)
     {
         for (int i = 0; i < tempc->index; i++)
         {
             if (deliver_status(tempc->check_out_items[i].product_id) && tempc->check_out_items[i].product_id == temp->product_id)
             {
                 found = 1;
-                printf("[1] Give Review  [2] Return\n");
+                printf("+-----------------------+\n");
+                printf("| Item Name: %s|\n", temp->name);
+                printf("+-----------------------+\n");
+                printf("| [1] Give Review       |\n");
+                printf("+-----------------------+\n");
+                printf("| [2] Return            |\n");
+                printf("+-----------------------+\n>>");
+
                 int ch;
                 scanf(" %d", &ch);
                 if (ch != 1)
@@ -631,17 +797,22 @@ void give_reviews()
                     pause();
                     customer_front_display();
                 }
-                printf("Enter A rating from 1 to 5 :");
+                printf("+---------------------------+\n");
+                printf("| Enter A rating from 1 to 5 |\n");
+                printf("+---------------------------+\n");
+
                 scanf(" %f", &temp->reviews);
                 temp->number_of_reviews += 1;
                 save_product_data();
             }
         }
-        temp=temp->next;
+        temp = temp->next;
     }
     if (!found)
     {
-        printf("No items to review\n");
+        printf("+-------------------+\n");
+        printf("| No items to review|\n");
+        printf("+-------------------+\n");
     }
     pause();
     customer_front_display();
@@ -663,10 +834,19 @@ void my_cart()
         printf("Ordered Items:\n");
         for (int i = 0; i < temp->index; i++)
         {
+            printf("+-------------------+\n");
+            printf("| Product Name:");
             product_name(temp->check_out_items[i].product_id);
-            printf("Item Price: %.2f\n", temp->check_out_items[i].price);
-            printf("Amount: %d\n", temp->check_out_items[i].amount);
-            printf("Delivery Status: ");
+            printf("+-------------------+\n");
+
+            printf("+-------------------+\n");
+            printf("| Item Price: %.2f  |\n", temp->check_out_items[i].price);
+
+            printf("+-------------------+\n");
+            printf("| Amount: %d       |\n", temp->check_out_items[i].amount);
+            printf("+-------------------+\n");
+            printf("| Delivery Status: ");
+
             if (deliver_status(temp->check_out_items[i].product_id))
             {
                 printf("Delivered\n");
@@ -675,11 +855,14 @@ void my_cart()
             {
                 printf("Undelivered\n");
             }
+            printf("+-------------------+\n");
         }
     }
     else
     {
-        printf("CART EMPTY");
+        printf("+---------------+\n");
+        printf("| CART EMPTY    |\n");
+        printf("+---------------+\n");
     }
     pause();
     customer_front_display();
@@ -714,11 +897,18 @@ void product_name(int id)
 void seller_front_display()
 {
     clear();
-    printf("[1] Add Items For Sell\n");
-    printf("[2] Search Items\n");
-    printf("[3] My Items\n");
-    printf("[4] Undelivered Products\n");
-    printf("[5] Logout\n");
+    printf("+---------------------------+\n");
+    printf("| [1] Add Items For Sell    |\n");
+    printf("+---------------------------+\n");
+    printf("| [2] Search Items           |\n");
+    printf("+---------------------------+\n");
+    printf("| [3] My Items               |\n");
+    printf("+---------------------------+\n");
+    printf("| [4] Undelivered Products  |\n");
+    printf("+---------------------------+\n");
+    printf("| [5] Logout                 |\n");
+    printf("+---------------------------+\n>>");
+
     int ch;
     scanf(" %d", &ch);
     switch (ch)
@@ -738,6 +928,7 @@ void seller_front_display()
     case 5:
         seller_ID = 0;
         seller_logged_in = 0;
+        front_display();
         break;
     default:
         seller_front_display();
@@ -749,11 +940,14 @@ void delivery_products()
     clear();
     product *temp = ptr;
     product *temp2 = ptr;
-    printf("My Undelivered Products:\n");
+    printf("+---------------------------+\n");
+    printf("| My Undelivered Products: |\n");
+    printf("+---------------------------+\n");
+
     int i = 1;
     while (temp != NULL)
     {
-        if (temp->seller_id == seller_ID && temp->delivery_status == 0)
+        if (temp->seller_id == seller_ID && temp->delivery_status == 0 && temp->total_sold > 0)
         {
             printf("[%d] Item Name: %s\n", i++, temp->name);
         }
@@ -761,11 +955,20 @@ void delivery_products()
     }
     if (i == 1)
     {
-        printf("There's No Undelivered Products\n");
+        printf("+-----------------------------------+\n");
+        printf("| There's No Undelivered Products  |\n");
+        printf("+-----------------------------------+\n");
+
         pause();
         seller_front_display();
     }
-    printf("\n[1]Delivery ALL [2] Return\n>>");
+    printf("+--------------------------+\n");
+    printf("| [1] Delivery ALL         |\n");
+    printf("+--------------------------+\n");
+    printf("| [2] Return               |\n");
+    printf("+--------------------------+\n");
+    printf("| >>");
+
     int ch;
     scanf(" %d", &ch);
     if (ch != 1)
@@ -781,13 +984,17 @@ void delivery_products()
         }
         temp2 = temp2->next;
     }
-    printf("Delivered Successfully\n");
+    printf("+---------------------------+\n");
+    printf("| Delivered Successfully   |\n");
+    printf("+---------------------------+\n");
+
     save_product_data();
     pause();
     seller_front_display();
 }
 void add_products()
 {
+    clear();
     product *temp = ptr;
     while (temp->next != NULL)
     {
@@ -799,14 +1006,30 @@ void add_products()
     {
         printf("[%d] %s\n", i + 1, categories[i]);
     }
-    printf("\nChoose Category: \n");
+    printf("+-------------------------------+\n");
+    printf("| Choose Category:\n");
     scanf(" %d", &temp->category);
-    printf("Name Of Poduct: ");
+    printf("+-------------------------------+\n");
+
+    printf("+-------------------------------+\n");
+    printf("| Name Of Product:");
     scanf(" %[^\n]s", temp->name);
-    printf("Unit Price: ");
+    printf("+-------------------------------+\n");
+
+    printf("+-------------------------------+\n");
+    printf("| Unit Price:");
     scanf(" %f", &temp->price);
-    printf("Total Stock: ");
+    printf("+-------------------------------+\n");
+
+    printf("+-------------------------------+\n");
+    printf("| Total Stock:");
     scanf(" %d", &temp->stock);
+    printf("+-------------------------------+\n");
+
+    printf("+-------------------------------+\n");
+    printf("| Added Successfully           |\n");
+    printf("+-------------------------------+\n");
+
     temp->product_id = id_generator();
     temp->seller_id = seller_ID;
     temp->next = NULL;
@@ -827,25 +1050,36 @@ void my_items()
     {
         if (items->seller_id == seller_ID)
         {
-            printf("\n[%d] Item\n", i++);
-            printf("Name: %s\n", items->name);
-            printf("Price: %.2f\n", items->price);
-            printf("In Stock: %d\n", items->stock);
-            printf("Total Sold: %d\n", items->total_sold);
+            printf("+----------------------+\n");
+            printf("| [%d] Item             |\n", i++);
+            printf("+----------------------+\n");
+            printf("| Name: %s             |\n", items->name);
+            printf("+----------------------+\n");
+            printf("| Price: %.2f           |\n", items->price);
+            printf("+----------------------+\n");
+            printf("| In Stock: %d          |\n", items->stock);
+            printf("+----------------------+\n");
+            printf("| Total Sold: %d        |\n", items->total_sold);
+            printf("+----------------------+\n");
         }
         items = items->next;
     }
     if (i == 1)
     {
-        printf("NO ITEM FOUND\n");
+        printf("+----------------------+\n");
+        printf("| NO ITEM FOUND        |\n");
+        printf("+----------------------+\n");
     }
     pause();
     seller_front_display();
 }
 void search_items()
 {
+    clear();
     char name[20];
-    printf("Enter Product Name:");
+    printf("+--------------------------+\n");
+    printf("| Enter Product Name:      |\n");
+    printf("+--------------------------+\n>>");
     scanf(" %[^\n]s", name);
     product *tempp = ptr;
     int found = 0;
@@ -853,10 +1087,16 @@ void search_items()
     {
         if (strcmp(tempp->name, name) == 0)
         {
-            printf("Found\n");
-            printf("Product Name: %s\n", tempp->name);
-            printf("Product Price: %.f\n", tempp->price);
-            printf("Product Stock: %d\n", tempp->stock);
+            printf("+-------------------+\n");
+            printf("| Found             |\n");
+            printf("+-------------------+\n");
+            printf("| Product Name: %s  |\n", tempp->name);
+            printf("+-------------------+\n");
+            printf("| Product Price: %.f |\n", tempp->price);
+            printf("+-------------------+\n");
+            printf("| Product Stock: %d  |\n", tempp->stock);
+            printf("+-------------------+\n");
+
             found = 1;
             break;
         }
@@ -865,7 +1105,9 @@ void search_items()
 
     if (!found)
     {
-        printf("Product Not Found\n");
+        printf("+----------------------+\n");
+        printf("| Product Not Found    |\n");
+        printf("+----------------------+\n");
     }
     if (!customer_logged_in && seller_logged_in)
     {
@@ -877,7 +1119,12 @@ void search_items()
         pause();
         front_display();
     }
-    printf("\n[1]Buy Item [2]Return\n");
+    printf("+----------------------+\n");
+    printf("| [1] Buy Item         |\n");
+    printf("+----------------------+\n");
+    printf("| [2] Return           |\n");
+    printf("+----------------------+\n>>");
+
     int ch;
     scanf(" %d", &ch);
     if (ch == 1)
@@ -891,22 +1138,37 @@ void buy_item(int product_id)
 {
     clear();
     product *temp = ptr;
-    printf("\nSelected Product: \n");
+
     while (temp != NULL)
     {
         if (product_id == temp->product_id)
         {
-            printf("Product name: %s\n", temp->name);
-            printf("Product Price: %.2f\n", temp->price);
+            printf("+----------------------+\n");
+            printf("| Selected Product:    |\n");
+            printf("+----------------------+\n");
+            printf("| Product name: %s     |\n", temp->name);
+            printf("+----------------------+\n");
+            printf("| Product Price: %.2f  |\n", temp->price);
+            printf("+----------------------+\n");
+
             break;
         }
         temp = temp->next;
     }
-    printf("\nHow Many do you want to buy: ");
+    printf("+-------------------------------+\n");
+    printf("| How Many do you want to buy: |\n");
+    printf("+-------------------------------+\n>>");
+
     int amount;
     scanf(" %d", &amount);
-    printf("Total Amount: %.2f BDT\n", temp->price * amount);
-    printf("[1]Confirm  [2]GO back\n");
+    printf("+-------------------------+\n");
+    printf("| Total Amount: %.2f BDT  |\n", temp->price * amount);
+    printf("+-------------------------+\n");
+    printf("| [1] Confirm             |\n");
+    printf("+-------------------------+\n");
+    printf("| [2] GO back             |\n");
+    printf("+-------------------------+\n>>");
+
     int ch;
     scanf(" %d", &ch);
     if (ch != 1)
@@ -929,7 +1191,10 @@ void buy_item(int product_id)
             tempc->balance -= amount * temp->price;
             if (tempc->balance < 0)
             {
-                printf("Not Enough Balance\n");
+                printf("+-------------------+\n");
+                printf("| Not Enough Balance|\n");
+                printf("+-------------------+\n");
+
                 pause();
                 customer_front_display();
             }
