@@ -603,7 +603,7 @@ void seller_sign_up()
         printf("| User Already Exists |\n");
         printf("+---------------------+\n");
         pause();
-        seller_front_display();
+        seller_login_portal();
     }
     printf("+-------------------+\n");
     printf("|    Password:      |\n");
@@ -800,8 +800,9 @@ void give_reviews()
                 printf("+---------------------------+\n");
                 printf("| Enter A rating from 1 to 5 |\n");
                 printf("+---------------------------+\n");
-
-                scanf(" %f", &temp->reviews);
+                float review;;
+                scanf(" %f", &review);
+                temp->reviews+=review;
                 temp->number_of_reviews += 1;
                 save_product_data();
             }
@@ -1050,16 +1051,16 @@ void my_items()
     {
         if (items->seller_id == seller_ID)
         {
+            printf("\n+----------------------+\n");
+            printf("| [%d] Item             \n", i++);
             printf("+----------------------+\n");
-            printf("| [%d] Item             |\n", i++);
+            printf("| Name: %s             \n", items->name);
             printf("+----------------------+\n");
-            printf("| Name: %s             |\n", items->name);
+            printf("| Price: %.2f BDT\n", items->price);
             printf("+----------------------+\n");
-            printf("| Price: %.2f           |\n", items->price);
+            printf("| In Stock: %d          \n", items->stock);
             printf("+----------------------+\n");
-            printf("| In Stock: %d          |\n", items->stock);
-            printf("+----------------------+\n");
-            printf("| Total Sold: %d        |\n", items->total_sold);
+            printf("| Total Sold: %d        \n", items->total_sold);
             printf("+----------------------+\n");
         }
         items = items->next;
@@ -1090,11 +1091,11 @@ void search_items()
             printf("+-------------------+\n");
             printf("| Found             |\n");
             printf("+-------------------+\n");
-            printf("| Product Name: %s  |\n", tempp->name);
+            printf("| Product Name: %s \n", tempp->name);
             printf("+-------------------+\n");
-            printf("| Product Price: %.f |\n", tempp->price);
+            printf("| Product Price: %.f BDT\n", tempp->price);
             printf("+-------------------+\n");
-            printf("| Product Stock: %d  |\n", tempp->stock);
+            printf("| Product Stock: %d  \n", tempp->stock);
             printf("+-------------------+\n");
 
             found = 1;
@@ -1146,9 +1147,9 @@ void buy_item(int product_id)
             printf("+----------------------+\n");
             printf("| Selected Product:    |\n");
             printf("+----------------------+\n");
-            printf("| Product name: %s     |\n", temp->name);
+            printf("| Product name: %s     \n", temp->name);
             printf("+----------------------+\n");
-            printf("| Product Price: %.2f  |\n", temp->price);
+            printf("| Product Price: %.2f BDT \n", temp->price);
             printf("+----------------------+\n");
 
             break;
@@ -1162,7 +1163,7 @@ void buy_item(int product_id)
     int amount;
     scanf(" %d", &amount);
     printf("+-------------------------+\n");
-    printf("| Total Amount: %.2f BDT  |\n", temp->price * amount);
+    printf("| Total Amount: %.2f BDT \n", temp->price * amount);
     printf("+-------------------------+\n");
     printf("| [1] Confirm             |\n");
     printf("+-------------------------+\n");
@@ -1177,6 +1178,13 @@ void buy_item(int product_id)
         customer_front_display();
     }
     temp->stock -= amount;
+    if(temp->stock<0)
+    {
+        temp->stock+=amount;
+        printf("Not Emough Stock\n");
+        pause();
+        customer_front_display();
+    }
     temp->total_sold += amount;
     temp->delivery_status = 0;
 
@@ -1191,6 +1199,7 @@ void buy_item(int product_id)
             tempc->balance -= amount * temp->price;
             if (tempc->balance < 0)
             {
+                tempc->balance+=amount*temp->price;
                 printf("+-------------------+\n");
                 printf("| Not Enough Balance|\n");
                 printf("+-------------------+\n");
@@ -1198,6 +1207,7 @@ void buy_item(int product_id)
                 pause();
                 customer_front_display();
             }
+            
             tempc->index += 1;
             break;
         }
