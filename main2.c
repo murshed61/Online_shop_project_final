@@ -438,22 +438,19 @@ void customer_sign_up()
     clear();
     customer *temp = head;
 
-    // Traverse to the end of the linked list
+   
     while (temp->next != NULL)
     {
         temp = temp->next;
     }
 
-    // Allocate memory for the new customer
     temp->next = (customer *)malloc(sizeof(customer));
     temp = temp->next;
     temp->next = NULL;
-
-    // Prompt the user for the username
     printf("+-------------------+\n");
     printf("|   Username:       |\n");
     printf("+-------------------+\n>>");
-    scanf(" %[^\n]s", temp->name); // Assuming temp->name is a character array for storing the username
+    scanf(" %[^\n]s", temp->name); 
     if (check_customer_username(temp->name))
     {
         printf("+---------------------+\n");
@@ -465,9 +462,8 @@ void customer_sign_up()
     printf("+-------------------+\n");
     printf("|   Password:       |\n");
     printf("+-------------------+\n>>");
-    scanf(" %s", temp->password); // Assuming temp->password is a character array for storing the password
+    scanf(" %s", temp->password); 
 
-    // Generate a unique customer ID
     temp->customer_id = id_generator();
     temp->balance = 1000;
     temp->index = 0;
@@ -596,7 +592,7 @@ void seller_sign_up()
     printf("+-------------------+\n");
     printf("|    UserName:      |\n");
     printf("+-------------------+\n");
-    scanf(" %[^\n]s", temps->name); // Assuming temps->name is a character array for storing the username
+    scanf(" %[^\n]s", temps->name); 
     if (check_seller_username(temps->name) == 1)
     {
         printf("+---------------------+\n");
@@ -608,7 +604,7 @@ void seller_sign_up()
     printf("+-------------------+\n");
     printf("|    Password:      |\n");
     printf("+-------------------+\n");
-    scanf(" %[^\n]s", temps->pass); // Assuming temps->pass is a character array for storing the password
+    scanf(" %[^\n]s", temps->pass); 
 
     temps->seller_id = id_generator();
     temps->undelivered_index = 0;
